@@ -793,7 +793,7 @@ beep(NOTE__a, 1000);
 //////////////////////////////////////////////////////////////////////////
 
 int tick = 0;
-int limit = 60;
+int limit = 60 + 30;
 int roundCount = 0;
 
 bool isPlaySound = false;
@@ -824,11 +824,9 @@ void showClock(){
   int minute = (sec/60);
   int show_sec = sec%60;
   if(show_sec<10){
-//    String timeStr = (String(minute) + ":0" + String(show_sec)  + ":" + String(msec) + "");
     String timeStr = (String(minute) + " : 0" + String(show_sec));
     printText(0, MAX_DEVICES-1, string2char(timeStr));
   }else{
-//    String timeStr = (String(minute) + ":" + String(show_sec)  + ":" + String(msec) + "");
     String timeStr = (String(minute) + " : " + String(show_sec));
     printText(0, MAX_DEVICES-1, string2char(timeStr));
   }
@@ -836,57 +834,104 @@ void showClock(){
 
 //////////////////////////////////////////////////////////////////////////
 
+int state;
+char key;
+char key1;
+char key2;
+char key3;
+
 void setup(){
   mx.begin();
   blinker.attach(0.01, changeState);
+  state = 0;
 }
   
 void loop(){
-  if(isPlaySound){
-    String timeStr = "R : " + String(roundCount);
-    printText(0, MAX_DEVICES-1, string2char(timeStr));
-    isPlaySound = false;
-    beep(NOTE__aH, 1000);
-  }
-  showClock();
-  char key = keypad.getKey();
-  if (key){
-    beep(NOTE__aH, 50);
-    if(key=='*'){
-      tick = 0;
-      roundCount = 0;
-      beep(NOTE__c, 100);
+  if(state == 0) {
+    if (isPlaySound) {
+      String timeStr = "R : " + String(roundCount);
+      printText(0, MAX_DEVICES-1, string2char(timeStr));
+      isPlaySound = false;
+      beep(NOTE__aH, 1000);
     }
-    if(key=='#'){
-      beep(NOTE__c, 100);
-      bool finish = false;
-      delay(800);
-      while(!finish){
-        char key1 = keypad.getKey();
-        if (key1){
-          beep(NOTE__aH, 50);
-          delay(800);
-          while(!finish){
-            char key2 = keypad.getKey();
-            if (key2){
-              beep(NOTE__aH, 50);
-              delay(800);
-              while(!finish){
-                char key3 = keypad.getKey();
-                if (key3){
-                  beep(NOTE__c, 100);
-                  int k1 = (key1 - '0') * 60;
-                  int k2 = (key2 - '0') * 10;
-                  int k3 = (key3 - '0') * 1;
-                  limit = k1 + k2 + k3;
-                  tick = 0;
-                  roundCount = 0;
-                  finish = true;
-                }
-              }
-            }
-          }
-        }
+    showClock();
+    key = keypad.getKey();
+    if(key) {
+      beep(NOTE__aH, 50);
+      if(key == '*') {
+        tick = 0;
+        roundCount = 0;
+      }else if(key == '#') {
+        state = 1;
+      }
+    }
+  }else if(state == 1) {
+    key1 = keypad.getKey();
+    if(key1) {
+      beep(NOTE__aH, 50);
+      if(key1 == '*') {
+        tick = 0;
+        roundCount = 0;
+        state = 0;
+      }else if(key1 == '#') {
+        tick = 0;
+        roundCount = 0;
+        state = 0;
+      }else {
+        printText(0, MAX_DEVICES-1, string2char((String(key1) + " : __")));
+        state = 2;
+      }
+    }
+  }else if(state == 2) {
+    key2 = keypad.getKey();
+    if(key2) {
+      beep(NOTE__aH, 50);
+      if(key2 == '*') {
+        tick = 0;
+        roundCount = 0;
+        state = 0;
+      }else if(key2 == '#') {
+        tick = 0;
+        roundCount = 0;
+        state = 0;
+      }else {
+        printText(0, MAX_DEVICES-1, string2char((String(key1) + " : "+String(key2)+"_")));
+        state = 3;
+      }
+    }
+  }else if(state == 3) {
+    key3 = keypad.getKey();
+    if(key3) {
+      beep(NOTE__aH, 50);
+      if(key3 == '*') {
+        tick = 0;
+        roundCount = 0;
+        state = 0;
+      }else if(key3 == '#') {
+        tick = 0;
+        roundCount = 0;
+        state = 0;
+      }else {
+        printText(0, MAX_DEVICES-1, string2char((String(key1) + " : "+String(key2)+String(key3))));
+        int ki1 = (key1 - '0') * 60;
+        int ki2 = (key2 - '0') * 10;
+        int ki3 = (key3 - '0') * 1;
+        limit = ki1 + ki2 + ki3;
+        state = 4;
+      }
+    }
+  }else if(state == 4) {
+    key3 = keypad.getKey();
+    if(key3) {
+      beep(NOTE__aH, 50);
+      if(key3 == '*') {
+        tick = 0;
+        roundCount = 0;
+        state = 0;
+      }else if(key3 == '#') {
+        tick = 0;
+        roundCount = 0;
+        state = 0;
       }
     }
   }
