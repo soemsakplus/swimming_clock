@@ -800,6 +800,14 @@ bool isPlaySound = false;
 
 Ticker blinker;
 
+int state;
+int workingMode;
+char key;
+char key1;
+char key2;
+char key3;
+
+
 void changeState()
 {
   tick++;
@@ -817,6 +825,24 @@ char* string2char(String command){
     }
 }
 
+void showClockBackward(){
+  int now = 0;
+  if(limit * 100 >= tick){
+    now = (limit * 100) - tick;
+  }
+  int sec = (now/100);
+  int msec = now%100;
+  int minute = (sec/60);
+  int show_sec = sec%60;
+  if(show_sec<10){
+    String timeStr = (String(minute) + " : 0" + String(show_sec));
+    printText(0, MAX_DEVICES-1, string2char(timeStr));
+  }else{
+    String timeStr = (String(minute) + " : " + String(show_sec));
+    printText(0, MAX_DEVICES-1, string2char(timeStr));
+  }
+}
+
 void showClock(){
   int now = tick;
   int sec = (now/100);
@@ -832,37 +858,60 @@ void showClock(){
   }
 }
 
-//////////////////////////////////////////////////////////////////////////
+void showClockCountOnly(){
+  int now = tick;
+  int sec = (now/100);
+  int msec = now%100;
+  int minute = (sec/60);
+  int show_sec = sec%60;
+  if(show_sec<10){
+    String timeStr = (String(minute) + ":0" + String(show_sec) + ":" + String(msec));
+    printText(0, MAX_DEVICES-1, string2char(timeStr));
+  }else{
+    String timeStr = (String(minute) + ":" + String(show_sec) + ":" + String(msec));
+    printText(0, MAX_DEVICES-1, string2char(timeStr));
+  }
+}
 
-int state;
-char key;
-char key1;
-char key2;
-char key3;
+//////////////////////////////////////////////////////////////////////////
 
 void setup(){
   mx.begin();
   blinker.attach(0.01, changeState);
   state = 0;
+  workingMode = 1;
 }
   
 void loop(){
-  if(state == 0) {
-    if (isPlaySound) {
+  if(state == 0){
+    if (isPlaySound){
       String timeStr = "R : " + String(roundCount);
       printText(0, MAX_DEVICES-1, string2char(timeStr));
       isPlaySound = false;
       beep(NOTE__aH, 1000);
     }
-    showClock();
+    if(workingMode == 2){
+      showClockBackward();
+    }else if(workingMode == 3){
+      limit = 60 * 60;
+      showClockCountOnly();
+    }else{
+      showClock();
+    }
     key = keypad.getKey();
     if(key) {
       beep(NOTE__aH, 50);
-      if(key == '*') {
+      if(key == '*'){
         tick = 0;
         roundCount = 0;
-      }else if(key == '#') {
+      }else if(key == '#'){
         state = 1;
+      }else if(key == '1'){
+        workingMode = 1;
+      }else if(key == '2'){
+        workingMode = 2;
+      }else if(key == '3'){
+        workingMode = 3;
       }
     }
   }else if(state == 1) {
